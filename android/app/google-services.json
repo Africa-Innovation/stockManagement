@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "889257060975",
+    "project_id": "stockmanagement-e8b88",
+    "storage_bucket": "stockmanagement-e8b88.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:889257060975:android:e3abcb6adb004c87f17b9a",
+        "android_client_info": {
+          "package_name": "com.boris.stockmanagement"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1K9tvk0nWha4rTHQp2RGg2zjGJE9q89A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:889257060975:android:60258e29c2cdfd90f17b9a",
+        "android_client_info": {
+          "package_name": "com.example.stockmanagement"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1K9tvk0nWha4rTHQp2RGg2zjGJE9q89A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

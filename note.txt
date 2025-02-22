@@ -1,0 +1,18 @@
+{
+  "status": "success",
+  "result": {
+    "@type": "type.googleapis.com/google.firebase.service.v1beta1.AndroidApp",
+    "name": "projects/stockmanagement-e8b88/androidApps/1:889257060975:android:e3abcb6adb004c87f17b9a",
+    "appId": "1:889257060975:android:e3abcb6adb004c87f17b9a",
+    "displayName": "stockmanagement",
+    "projectId": "stockmanagement-e8b88",
+    "packageName": "com.boris.stockmanagement",
+    "apiKeyId": "d5b5a458-c35d-47eb-8949-490775762327",
+    "state": "ACTIVE",
+    "expireTime": "1970-01-01T00:00:00Z",
+    "etag": "1_87c412f7-2d29-4efe-b654-8a0672582aa7"
+  }
+
+
+
+  firebase_service.dart 
