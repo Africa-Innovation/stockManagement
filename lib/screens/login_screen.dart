@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stockmanagement/database/firebase_service.dart';
+import 'package:stockmanagement/screens/signup_screen.dart';
 import '../database/database_helper.dart';
 import '../utils/session_manager.dart';
 
@@ -52,6 +53,18 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _loginUser,
               child: Text('Se connecter'),
             ),
+
+            Row(children: [
+              ElevatedButton(
+                onPressed: (){
+                  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => SignUpScreen(),
+    ),
+  );
+                }, child: Text("signup"))
+            ],)
           ],
         ),
       ),

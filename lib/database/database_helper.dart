@@ -4,6 +4,7 @@ import 'package:stockmanagement/Model/product_model.dart';
 import 'package:stockmanagement/Model/receipt_model.dart';
 import 'package:stockmanagement/Model/sale_item.dart';
 import 'package:stockmanagement/Model/vente_model.dart';
+import 'package:stockmanagement/utils/session_manager.dart';
 import 'package:uuid/uuid.dart';
 
 class DatabaseHelper {
@@ -56,7 +57,8 @@ Future<void> _checkAndCreateProductsTable(Database db) async {
       name TEXT NOT NULL,
       quantity INTEGER NOT NULL,
       price REAL NOT NULL,
-      minStock INTEGER NOT NULL
+      minStock INTEGER NOT NULL,
+      userPhone TEXT NOT NULL
     )
   ''');
 
@@ -66,7 +68,8 @@ Future<void> _checkAndCreateProductsTable(Database db) async {
       totalPrice REAL NOT NULL,
       date TEXT NOT NULL,
       clientName TEXT,
-      receiptId TEXT NOT NULL 
+      receiptId TEXT NOT NULL,
+      userPhone TEXT NOT NULL
     )
   ''');
 
@@ -87,7 +90,12 @@ Future<void> _checkAndCreateProductsTable(Database db) async {
 
   Future<int> insertProduct(Product product) async {
   final db = await instance.database;
-  print("Insertion du produit : ${product.name}, ${product.quantity}, ${product.price}, ${product.minStock}"); // Debug
+  String? userPhone = await SessionManager.getUserSession(); // Récupérer l'utilisateur connecté
+
+  if (userPhone == null) {
+    throw Exception("Utilisateur non connecté !");
+  }
+
   return await db.insert(
     'products',
     {
@@ -95,6 +103,7 @@ Future<void> _checkAndCreateProductsTable(Database db) async {
       'quantity': product.quantity,
       'price': product.price,
       'minStock': product.minStock,
+      'userPhone': userPhone, // Associer le produit à l'utilisateur
     },
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
@@ -102,11 +111,24 @@ Future<void> _checkAndCreateProductsTable(Database db) async {
 
 
 
-  Future<List<Product>> getAllProducts() async {
+
+Future<List<Product>> getAllProducts() async {
   final db = await instance.database;
-  final result = await db.query('products');
+  String? userPhone = await SessionManager.getUserSession(); // Récupérer l'utilisateur connecté
+
+  if (userPhone == null) {
+    throw Exception("Utilisateur non connecté !");
+  }
+
+  final result = await db.query(
+    'products',
+    where: 'userPhone = ?', // Filtrer par utilisateur
+    whereArgs: [userPhone],
+  );
+
   return result.map((e) => Product.fromMap(e)).toList();
 }
+
 
 
   Future<int> updateProduct(Product product) async {
@@ -155,70 +177,66 @@ Future<void> _checkAndCreateProductsTable(Database db) async {
 
 Future<void> insertSale(Sale sale) async {
   final db = await instance.database;
+  String? userPhone = await SessionManager.getUserSession(); // Récupérer l'utilisateur connecté
 
-  try {
-    await db.transaction((txn) async {
-      // Générer un UUID unique pour le receiptId
-      var uuid = Uuid();
-      String receiptId = uuid.v4();  // Génère un ID unique pour le reçu
+  if (userPhone == null) {
+    throw Exception("Utilisateur non connecté !");
+  }
 
-      // Stocker le receiptId dans la variable globale
-      globalReceiptId = receiptId;
+  await db.transaction((txn) async {
+    var uuid = Uuid();
+    String receiptId = uuid.v4();  
+    globalReceiptId = receiptId;
 
-      // Insérer la vente avec le receiptId unique
-      int saleId = await txn.insert(
-        'sales',
+    int saleId = await txn.insert(
+      'sales',
+      {
+        'totalPrice': sale.totalPrice,
+        'date': sale.date.toIso8601String(),
+        'clientName': sale.clientName,
+        'receiptId': receiptId,
+        'userPhone': userPhone,  // Associer la vente à l'utilisateur
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    for (var item in sale.saleItems) {
+      await txn.insert(
+        'sale_products',
         {
-          'totalPrice': sale.totalPrice,
-          'date': sale.date.toIso8601String(),
-          'clientName': sale.clientName,
-          'receiptId': receiptId,  // Utilisation du même receiptId pour la vente
+          'saleId': saleId,
+          'productId': item.product.id,
+          'quantity': item.quantity,
+          'price': item.product.price,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-
-      // Insérer les produits associés à la vente dans la table sale_products
-      for (var item in sale.saleItems) {
-        await txn.insert(
-          'sale_products',
-          {
-            'saleId': saleId,
-            'productId': item.product.id,
-            'quantity': item.quantity,
-            'price': item.product.price,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-
-      // Récupère et affiche correctement l'ID du reçu ici
-      print("🧾 Reçu généré avec ID de vente : $saleId, ID de reçu : $receiptId");
-      
-      // Autres opérations d'insertion...
-    });
-  } catch (e) {
-    print("❌ Erreur lors de l'insertion de la vente : $e");
-  }
+    }
+  });
 }
+
 
 
 
 Future<List<Sale>> getAllSales() async {
   final db = await instance.database;
+  String? userPhone = await SessionManager.getUserSession(); // Récupérer l'utilisateur connecté
 
-  final salesList = await db.query('sales');
+  if (userPhone == null) {
+    throw Exception("Utilisateur non connecté !");
+  }
+
+  final salesList = await db.query(
+    'sales',
+    where: 'userPhone = ?', // Filtrer par utilisateur
+    whereArgs: [userPhone],
+  );
 
   List<Sale> sales = [];
-
-  print("📦 Données brutes récupérées de la table sales: $salesList");
 
   for (var sale in salesList) {
     final saleId = sale['id'];
 
-    // Vérification que receiptId est bien récupéré
-    print("📝 Vente récupérée - ID: $saleId, Client: ${sale['clientName']}, Reçu: ${sale['receiptId']}");
-
-    // Récupérer les produits vendus pour cette vente
     final saleItemsList = await db.rawQuery('''
       SELECT p.id, p.name, sp.quantity, sp.price 
       FROM sale_products sp
@@ -226,7 +244,6 @@ Future<List<Sale>> getAllSales() async {
       WHERE sp.saleId = ?
     ''', [saleId]);
 
-    // Transformer la liste des produits en liste de SaleItem
     List<SaleItem> saleItems = saleItemsList.map((item) {
       return SaleItem(
         product: Product(
@@ -234,24 +251,25 @@ Future<List<Sale>> getAllSales() async {
           name: item['name'] as String,
           quantity: item['quantity'] as int,
           price: item['price'] as double,
-          minStock: 0,  // Valeur par défaut
+          minStock: 0,
         ),
-        quantity: item['quantity'] as int,  // Quantité vendue
+        quantity: item['quantity'] as int,
       );
     }).toList();
 
     sales.add(Sale(
       id: saleId as int?,
       clientName: sale['clientName'] as String,
-      saleItems: saleItems,  
+      saleItems: saleItems,
       totalPrice: sale['totalPrice'] as double,
       date: DateTime.parse(sale['date'] as String),
-      receiptId: sale['receiptId'] as String,  // Vérification que receiptId est bien récupéré
+      receiptId: sale['receiptId'] as String,
     ));
   }
 
   return sales;
 }
+
 }
 
 
