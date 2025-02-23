@@ -4,6 +4,7 @@ import 'package:stockmanagement/screens/ProductManagementScreen.dart';
 import 'package:stockmanagement/screens/ReceiptScreen.dart';
 import 'package:stockmanagement/screens/SaleHistoric.dart';
 import 'package:stockmanagement/screens/SalesScreen.dart';
+import 'package:stockmanagement/services/SyncService.dart';
 import '../utils/session_manager.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
+  final SyncService _syncService = SyncService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProductManagementScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => ProductManagementScreen()),
                 );
               },
             ),
@@ -87,12 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               leading: Icon(Icons.receipt),
-              title: Text('Reçus'),
+              title: Text('Synchronisation'),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ReceiptScreen()),
-                );
+                _syncService.syncDataToFirebase(context);
               },
             ),
             ListTile(
@@ -115,10 +116,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: Column(
-
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Bienvenue sur l'app de gestion de stock",style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          Text("Bienvenue sur l'app de gestion de stock",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
           Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
@@ -158,8 +159,20 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 const List<String> buttons = [
-  "7", "8", "9", "/",
-  "4", "5", "6", "*",
-  "1", "2", "3", "-",
-  "C", "0", "=", "+"
+  "7",
+  "8",
+  "9",
+  "/",
+  "4",
+  "5",
+  "6",
+  "*",
+  "1",
+  "2",
+  "3",
+  "-",
+  "C",
+  "0",
+  "=",
+  "+"
 ];
